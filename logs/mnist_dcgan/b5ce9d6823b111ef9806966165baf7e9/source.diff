@@ -1,0 +1,218 @@
+diff --git a/model.ipynb b/model.ipynb
+index f088bd8..eb03940 100644
+--- a/model.ipynb
++++ b/model.ipynb
+@@ -377,6 +377,213 @@
+     "print(\"Caption:\", caption)\n"
+    ]
+   },
++  {
++   "cell_type": "code",
++   "execution_count": 7,
++   "metadata": {},
++   "outputs": [],
++   "source": [
++    "import torch.nn as nn\n",
++    "from labml import experiment\n",
++    "from labml.configs import calculate\n",
++    "from labml_helpers.module import Module\n",
++    "from labml_nn.gan.original.experiment import Configs\n"
++   ]
++  },
++  {
++   "cell_type": "code",
++   "execution_count": 18,
++   "metadata": {},
++   "outputs": [
++    {
++     "name": "stdout",
++     "output_type": "stream",
++     "text": [
++      "Requirement already satisfied: labml in /Library/Frameworks/Python.framework/Versions/3.12/lib/python3.12/site-packages (0.5.2)\n",
++      "Requirement already satisfied: matplotlib in /Library/Frameworks/Python.framework/Versions/3.12/lib/python3.12/site-packages (3.8.0)\n",
++      "Requirement already satisfied: gitpython in /Library/Frameworks/Python.framework/Versions/3.12/lib/python3.12/site-packages (from labml) (3.1.43)\n",
++      "Requirement already satisfied: pyyaml in /Library/Frameworks/Python.framework/Versions/3.12/lib/python3.12/site-packages (from labml) (6.0.1)\n",
++      "Requirement already satisfied: numpy in /Library/Frameworks/Python.framework/Versions/3.12/lib/python3.12/site-packages (from labml) (1.26.3)\n",
++      "Requirement already satisfied: contourpy>=1.0.1 in /Library/Frameworks/Python.framework/Versions/3.12/lib/python3.12/site-packages (from matplotlib) (1.1.1)\n",
++      "Requirement already satisfied: cycler>=0.10 in /Library/Frameworks/Python.framework/Versions/3.12/lib/python3.12/site-packages (from matplotlib) (0.12.1)\n",
++      "Requirement already satisfied: fonttools>=4.22.0 in /Library/Frameworks/Python.framework/Versions/3.12/lib/python3.12/site-packages (from matplotlib) (4.43.1)\n",
++      "Requirement already satisfied: kiwisolver>=1.0.1 in /Library/Frameworks/Python.framework/Versions/3.12/lib/python3.12/site-packages (from matplotlib) (1.4.5)\n",
++      "Requirement already satisfied: packaging>=20.0 in /Users/cth/Library/Python/3.12/lib/python/site-packages (from matplotlib) (23.2)\n",
++      "Requirement already satisfied: pillow>=6.2.0 in /Library/Frameworks/Python.framework/Versions/3.12/lib/python3.12/site-packages (from matplotlib) (10.1.0)\n",
++      "Requirement already satisfied: pyparsing>=2.3.1 in /Library/Frameworks/Python.framework/Versions/3.12/lib/python3.12/site-packages (from matplotlib) (3.1.1)\n",
++      "Requirement already satisfied: python-dateutil>=2.7 in /Users/cth/Library/Python/3.12/lib/python/site-packages (from matplotlib) (2.8.2)\n",
++      "Requirement already satisfied: six>=1.5 in /Users/cth/Library/Python/3.12/lib/python/site-packages (from python-dateutil>=2.7->matplotlib) (1.16.0)\n",
++      "Requirement already satisfied: gitdb<5,>=4.0.1 in /Library/Frameworks/Python.framework/Versions/3.12/lib/python3.12/site-packages (from gitpython->labml) (4.0.11)\n",
++      "Requirement already satisfied: smmap<6,>=3.0.1 in /Library/Frameworks/Python.framework/Versions/3.12/lib/python3.12/site-packages (from gitdb<5,>=4.0.1->gitpython->labml) (5.0.1)\n"
++     ]
++    }
++   ],
++   "source": [
++    "!pip install labml matplotlib\n",
++    "\n"
++   ]
++  },
++  {
++   "cell_type": "code",
++   "execution_count": 13,
++   "metadata": {},
++   "outputs": [],
++   "source": [
++    "class Generator(Module):\n",
++    "    def __init__(self):\n",
++    "        super().__init__()\n",
++    "        self.layers = nn.Sequential(\n",
++    "            nn.ConvTranspose2d(100, 1024, 3, 1, 0, bias=False),\n",
++    "            nn.BatchNorm2d(1024),\n",
++    "            nn.ReLU(True),\n",
++    "            nn.ConvTranspose2d(1024, 512, 3, 2, 0, bias=False),\n",
++    "            nn.BatchNorm2d(512),\n",
++    "            nn.ReLU(True),\n",
++    "            nn.ConvTranspose2d(512, 256, 4, 2, 1, bias=False),\n",
++    "            nn.BatchNorm2d(256),\n",
++    "            nn.ReLU(True),\n",
++    "            nn.ConvTranspose2d(256, 1, 4, 2, 1, bias=False),\n",
++    "            nn.Tanh()\n",
++    "        )\n",
++    "        self.apply(_weights_init)\n",
++    "\n",
++    "    def forward(self, x):\n",
++    "        x = x.unsqueeze(-1).unsqueeze(-1)\n",
++    "        x = self.layers(x)\n",
++    "        return x\n",
++    "\n",
++    "class Discriminator(Module):\n",
++    "    def __init__(self):\n",
++    "        super().__init__()\n",
++    "        self.layers = nn.Sequential(\n",
++    "            nn.Conv2d(1, 256, 4, 2, 1, bias=False),\n",
++    "            nn.LeakyReLU(0.2, inplace=True),\n",
++    "            nn.Conv2d(256, 512, 4, 2, 1, bias=False),\n",
++    "            nn.BatchNorm2d(512),\n",
++    "            nn.LeakyReLU(0.2, inplace=True),\n",
++    "            nn.Conv2d(512, 1024, 3, 2, 0, bias=False),\n",
++    "            nn.BatchNorm2d(1024),\n",
++    "            nn.LeakyReLU(0.2, inplace=True),\n",
++    "            nn.Conv2d(1024, 1, 3, 1, 0, bias=False),\n",
++    "        )\n",
++    "        self.apply(_weights_init)\n",
++    "\n",
++    "    def forward(self, x):\n",
++    "        x = self.layers(x)\n",
++    "        return x.view(x.shape[0], -1)\n"
++   ]
++  },
++  {
++   "cell_type": "code",
++   "execution_count": 14,
++   "metadata": {},
++   "outputs": [],
++   "source": [
++    "def _weights_init(m):\n",
++    "    classname = m.__class__.__name__\n",
++    "    if classname.find('Conv') != -1:\n",
++    "        nn.init.normal_(m.weight.data, 0.0, 0.02)\n",
++    "    elif classname.find('BatchNorm') != -1:\n",
++    "        nn.init.normal_(m.weight.data, 1.0, 0.02)\n",
++    "        nn.init.constant_(m.bias.data, 0)\n"
++   ]
++  },
++  {
++   "cell_type": "code",
++   "execution_count": 15,
++   "metadata": {},
++   "outputs": [
++    {
++     "data": {
++      "text/plain": [
++       "<function __main__.<lambda>(c)>"
++      ]
++     },
++     "execution_count": 15,
++     "metadata": {},
++     "output_type": "execute_result"
++    }
++   ],
++   "source": [
++    "calculate(Configs.generator, 'cnn', lambda c: Generator().to(c.device))\n",
++    "calculate(Configs.discriminator, 'cnn', lambda c: Discriminator().to(c.device))\n"
++   ]
++  },
++  {
++   "cell_type": "code",
++   "execution_count": 17,
++   "metadata": {},
++   "outputs": [
++    {
++     "name": "stderr",
++     "output_type": "stream",
++     "text": [
++      "/Users/cth/Library/Python/3.12/lib/python/site-packages/IPython/core/interactiveshell.py:3526: Warning: Overriding option for generator: cnn\n",
++      "  exec(code_obj, self.user_global_ns, self.user_ns)\n",
++      "/Users/cth/Library/Python/3.12/lib/python/site-packages/IPython/core/interactiveshell.py:3526: Warning: Overriding option for discriminator: cnn\n",
++      "  exec(code_obj, self.user_global_ns, self.user_ns)\n"
++     ]
++    },
++    {
++     "data": {
++      "text/html": [
++       "<pre style=\"overflow-x: scroll;\"></pre>"
++      ],
++      "text/plain": [
++       "<IPython.core.display.HTML object>"
++      ]
++     },
++     "metadata": {},
++     "output_type": "display_data"
++    },
++    {
++     "ename": "NameError",
++     "evalue": "name 'monit' is not defined",
++     "output_type": "error",
++     "traceback": [
++      "\u001b[0;31m---------------------------------------------------------------------------\u001b[0m",
++      "\u001b[0;31mNameError\u001b[0m                                 Traceback (most recent call last)",
++      "Cell \u001b[0;32mIn[17], line 17\u001b[0m\n\u001b[1;32m     14\u001b[0m         _ \u001b[38;5;241m=\u001b[39m conf\u001b[38;5;241m.\u001b[39mtrainer\n\u001b[1;32m     15\u001b[0m         conf\u001b[38;5;241m.\u001b[39mtrainer()\n\u001b[0;32m---> 17\u001b[0m \u001b[43mmain\u001b[49m\u001b[43m(\u001b[49m\u001b[43m)\u001b[49m\n",
++      "Cell \u001b[0;32mIn[17], line 11\u001b[0m, in \u001b[0;36mmain\u001b[0;34m()\u001b[0m\n\u001b[1;32m      4\u001b[0m experiment\u001b[38;5;241m.\u001b[39mconfigs(conf,\n\u001b[1;32m      5\u001b[0m                    {\u001b[38;5;124m'\u001b[39m\u001b[38;5;124mdiscriminator\u001b[39m\u001b[38;5;124m'\u001b[39m: \u001b[38;5;124m'\u001b[39m\u001b[38;5;124mcnn\u001b[39m\u001b[38;5;124m'\u001b[39m,\n\u001b[1;32m      6\u001b[0m                     \u001b[38;5;124m'\u001b[39m\u001b[38;5;124mgenerator\u001b[39m\u001b[38;5;124m'\u001b[39m: \u001b[38;5;124m'\u001b[39m\u001b[38;5;124mcnn\u001b[39m\u001b[38;5;124m'\u001b[39m,\n\u001b[1;32m      7\u001b[0m                     \u001b[38;5;124m'\u001b[39m\u001b[38;5;124mlabel_smoothing\u001b[39m\u001b[38;5;124m'\u001b[39m: \u001b[38;5;241m0.01\u001b[39m})\n\u001b[1;32m      8\u001b[0m \u001b[38;5;28;01mwith\u001b[39;00m experiment\u001b[38;5;241m.\u001b[39mstart():\n\u001b[1;32m      9\u001b[0m     \u001b[38;5;66;03m# Comment out the problematic line\u001b[39;00m\n\u001b[1;32m     10\u001b[0m     \u001b[38;5;66;03m# conf.run()  # Direct call to run method might be problematic, try alternative approach\u001b[39;00m\n\u001b[0;32m---> 11\u001b[0m     \u001b[38;5;28;01mwith\u001b[39;00m \u001b[43mmonit\u001b[49m\u001b[38;5;241m.\u001b[39msection(\u001b[38;5;124m\"\u001b[39m\u001b[38;5;124mInitialize\u001b[39m\u001b[38;5;124m\"\u001b[39m):\n\u001b[1;32m     12\u001b[0m         conf\u001b[38;5;241m.\u001b[39minit()\n\u001b[1;32m     13\u001b[0m     _ \u001b[38;5;241m=\u001b[39m conf\u001b[38;5;241m.\u001b[39mvalidator\n",
++      "\u001b[0;31mNameError\u001b[0m: name 'monit' is not defined"
++     ]
++    }
++   ],
++   "source": [
++    "def main():\n",
++    "    conf = Configs()\n",
++    "    experiment.create(name='mnist_dcgan')\n",
++    "    experiment.configs(conf,\n",
++    "                       {'discriminator': 'cnn',\n",
++    "                        'generator': 'cnn',\n",
++    "                        'label_smoothing': 0.01})\n",
++    "    with experiment.start():\n",
++    "        # Comment out the problematic line\n",
++    "        # conf.run()  # Direct call to run method might be problematic, try alternative approach\n",
++    "        with monit.section(\"Initialize\"):\n",
++    "            conf.init()\n",
++    "        _ = conf.validator\n",
++    "        _ = conf.trainer\n",
++    "        conf.trainer()\n",
++    "\n",
++    "main()\n",
++    "\n"
++   ]
++  },
++  {
++   "cell_type": "code",
++   "execution_count": null,
++   "metadata": {},
++   "outputs": [],
++   "source": []
++  },
++  {
++   "cell_type": "code",
++   "execution_count": null,
++   "metadata": {},
++   "outputs": [],
++   "source": []
++  },
+   {
+    "cell_type": "code",
+    "execution_count": null,

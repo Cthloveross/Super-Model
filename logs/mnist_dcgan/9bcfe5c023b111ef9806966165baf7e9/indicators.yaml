@@ -1,0 +1,38 @@
+indicators: {}
+wildcards:
+  '*':
+    class_name: Scalar
+    is_print: true
+    name: '*'
+  grad.*:
+    class_name: Scalar
+    is_print: false
+    name: grad.*
+  hp.*:
+    class_name: Scalar
+    is_print: false
+    name: hp.*
+  loss.discriminator.*:
+    class_name: Scalar
+    is_print: true
+    name: loss.discriminator.*
+  loss.generator.*:
+    class_name: Scalar
+    is_print: true
+    name: loss.generator.*
+  module.*:
+    class_name: Scalar
+    is_print: false
+    name: module.*
+  optim.*:
+    class_name: Scalar
+    is_print: false
+    name: optim.*
+  param.*:
+    class_name: Scalar
+    is_print: false
+    name: param.*
+  time.*:
+    class_name: Scalar
+    is_print: false
+    name: time.*

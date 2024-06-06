@@ -1,0 +1,19 @@
+comment: ''
+commit: a4f62a91593c553c55d895898f78b034d2a3d4ce
+commit_message: some intial set up and transformer model
+distributed_rank: 0
+distributed_world_size: 0
+is_dirty: true
+load_run: null
+name: mnist_dcgan
+notes: ''
+python_file: notebook.ipynb
+repo_remotes:
+- https://github.com/Cthloveross/Super-Model.git
+start_step: 0
+tags:
+- mnist
+- dcgan
+trial_date: '2024-06-05'
+trial_time: '20:06:03'
+uuid: b5ce9d6823b111ef9806966165baf7e9
