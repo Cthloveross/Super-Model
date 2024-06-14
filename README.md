@@ -21,9 +21,15 @@ The project is divided into two main parts:
 - `data_preparation/`: Contains scripts for data preparation and caption generation.
 - `model/`: Contains the `model.py` script for image generation and evaluation.
 - `images/`: Contains example images for comparison.
+- `caption_gen_model.ipynb`: Jupyter notebook for caption generation using the transformer model.
+- `dog_model.ipynb`: Jupyter notebook for generating images for the Dog dataset.
+- `cat_model.ipynb`: Jupyter notebook for generating images for the Cat dataset.
+- `swan_model.ipynb`: Jupyter notebook for generating images for the Swan dataset.
 
 ## Getting Started
+
 ### Prerequisites
+Ensure you have the following software installed:
 - Python 3.7+
 - PyTorch
 - Transformers (Hugging Face)
