@@ -82,13 +82,16 @@ Generated images closely matched original images for breeds, poses, and activiti
 Below are some examples of generated images from each dataset:
 
 - **Dog Dataset**
-  ![Dog Image Example](images/dog_example.png)
+  
+  ![Dog Image Example](dataset/dog/selected_images/10_dog.jpg)
 
 - **Cat Dataset**
-  ![Cat Image Example](images/cat_example.png)
+  
+  ![Cat Image Example](dataset/cat/selected_images/10_cat.jpg)
 
 - **Swan Dataset**
-  ![Swan Image Example](images/swan_example.png)
+  
+  ![Swan Image Example](dataset/swan/selected_images/10_swan.jpg)
 
 ## Conclusion
 This study demonstrated the potential of Stable Diffusion for text-to-image synthesis across three datasets. The high IS and CLIP scores indicate Stable Diffusion’s capability to generate high-quality, relevant images. This work underscores the potential of generative models for content creation in fields like entertainment, design, and virtual reality.
